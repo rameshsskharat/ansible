@@ -1,15 +1,49 @@
 ---
-- name: Create OpenShift Virtual Machine
+- name: Create OpenShift Virtual Machine using kubeconfig
   hosts: localhost
   gather_facts: false
 
+  vars:
+    kubeconfig_path: /tmp/openshift-kubeconfig.yaml
+
   tasks:
+
+    - name: Create temporary kubeconfig file
+      copy:
+        dest: "{{ kubeconfig_path }}"
+        mode: '0600'
+        content: |
+          apiVersion: v1
+          kind: Config
+
+          clusters:
+            - name: c106-e-us-south-containers-cloud-ibm-com:31818
+              cluster:
+                server: https://c106-e.us-south.containers.cloud.ibm.com:31818
+                insecure-skip-tls-verify: true
+
+          contexts:
+            - name: default/c106-e-us-south-containers-cloud-ibm-com:31818/IAM#ravi.shukla03@gmail.com
+              context:
+                cluster: c106-e-us-south-containers-cloud-ibm-com:31818
+                namespace: default
+                user: IAM#ravi.shukla03@gmail.com/c106-e-us-south-containers-cloud-ibm-com:31818
+
+          current-context: default/c106-e-us-south-containers-cloud-ibm-com:31818/IAM#ravi.shukla03@gmail.com
+
+          users:
+            - name: IAM#ravi.shukla03@gmail.com/c106-e-us-south-containers-cloud-ibm-com:31818
+              user:
+                token: sha256~0gqj9hM8hGz3oR0rLLGHiouAW6xppLd5Q0WwlFlPg84
+
     - name: Create VirtualMachine in OpenShift Virtualization
       kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig_path }}"
         state: present
         definition:
           apiVersion: kubevirt.io/v1
           kind: VirtualMachine
+
           metadata:
             name: fedora-orange-skink-51
             namespace: trainer1
@@ -23,6 +57,7 @@
                     kind: DataSource
                     name: newfedora
                     namespace: trainer1
+
                   storage:
                     resources:
                       requests:
@@ -47,6 +82,7 @@
                 domain:
                   devices:
                     autoattachPodInterface: false
+
                     disks:
                       - bootOrder: 1
                         name: rootdisk
@@ -62,15 +98,20 @@
                 subdomain: headless
 
                 volumes:
-                  - dataVolume:
+                  - name: rootdisk
+                    dataVolume:
                       name: fedora-orange-skink-51-volume
-                    name: rootdisk
 
-                  - cloudInitNoCloud:
+                  - name: cloudinitdisk
+                    cloudInitNoCloud:
                       userData: |
                         #cloud-config
                         chpasswd:
                           expire: false
                         password: vi3n-3nnj-68sf
                         user: fedora
-                    name: cloudinitdisk
+
+    - name: Remove temporary kubeconfig file
+      file:
+        path: "{{ kubeconfig_path }}"
+        state: absent
