@@ -45,13 +45,13 @@
           kind: VirtualMachine
 
           metadata:
-            name: fedora-orange-skink-51
+            name: fedora-samosa
             namespace: trainer1
 
           spec:
             dataVolumeTemplates:
               - metadata:
-                  name: fedora-orange-skink-51-volume
+                  name: fedora-samosa
                 spec:
                   sourceRef:
                     kind: DataSource
@@ -100,7 +100,7 @@
                 volumes:
                   - name: rootdisk
                     dataVolume:
-                      name: fedora-orange-skink-51-volume
+                      name: fedora-samosa
 
                   - name: cloudinitdisk
                     cloudInitNoCloud:
