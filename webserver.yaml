@@ -1,1 +1,8 @@
-
+---
+- name: learning playbooks
+  hosts: localhost
+  tasks:
+  - name: printing-message
+    debug:
+      msg: "hello world"
+...
