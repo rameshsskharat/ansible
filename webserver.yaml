@@ -1,55 +1,76 @@
-apiVersion: kubevirt.io/v1
-kind: VirtualMachine
-metadata:
-  name: fedora-orange-skink-51
-  namespace: trainer1
-spec:
-  dataVolumeTemplates:
-    - metadata:
-        name: fedora-orange-skink-51-volume
-      spec:
-        sourceRef:
-          kind: DataSource
-          name: newfedora
-          namespace: trainer1
-        storage:
-          resources:
-            requests:
-              storage: 27Gi
-          storageClassName: ocs-storagecluster-ceph-rbd
-  instancetype:
-    name: u1.small
-  preference:
-    name: fedora
-    kind: VirtualMachineClusterPreference
-  runStrategy: Always
-  template:
-    metadata:
-      labels:
-        network.kubevirt.io/headlessService: headless
-    spec:
-      domain:
-        devices:
-          autoattachPodInterface: false
-          disks:
-            - bootOrder: 1
-              name: rootdisk
-          interfaces:
-            - masquerade: {}
-              name: default
-      networks:
-        - name: default
-          pod: {}
-      subdomain: headless
-      volumes:
-        - dataVolume:
-            name: fedora-orange-skink-51-volume
-          name: rootdisk
-        - cloudInitNoCloud:
-            userData: |
-              #cloud-config
-              chpasswd:
-                expire: false
-              password: vi3n-3nnj-68sf
-              user: fedora
-          name: cloudinitdisk
+---
+- name: Create OpenShift Virtual Machine
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Create VirtualMachine in OpenShift Virtualization
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: kubevirt.io/v1
+          kind: VirtualMachine
+          metadata:
+            name: fedora-orange-skink-51
+            namespace: trainer1
+
+          spec:
+            dataVolumeTemplates:
+              - metadata:
+                  name: fedora-orange-skink-51-volume
+                spec:
+                  sourceRef:
+                    kind: DataSource
+                    name: newfedora
+                    namespace: trainer1
+                  storage:
+                    resources:
+                      requests:
+                        storage: 27Gi
+                    storageClassName: ocs-storagecluster-ceph-rbd
+
+            instancetype:
+              name: u1.small
+
+            preference:
+              name: fedora
+              kind: VirtualMachineClusterPreference
+
+            runStrategy: Always
+
+            template:
+              metadata:
+                labels:
+                  network.kubevirt.io/headlessService: headless
+
+              spec:
+                domain:
+                  devices:
+                    autoattachPodInterface: false
+                    disks:
+                      - bootOrder: 1
+                        name: rootdisk
+
+                    interfaces:
+                      - masquerade: {}
+                        name: default
+
+                networks:
+                  - name: default
+                    pod: {}
+
+                subdomain: headless
+
+                volumes:
+                  - dataVolume:
+                      name: fedora-orange-skink-51-volume
+                    name: rootdisk
+
+                  - cloudInitNoCloud:
+                      userData: |
+                        #cloud-config
+                        chpasswd:
+                          expire: false
+                        password: vi3n-3nnj-68sf
+                        user: fedora
+                    name: cloudinitdisk
