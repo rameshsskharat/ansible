@@ -1,0 +1,46 @@
+
+
+eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJJQk0gTWFya2V0cGxhY2UiLCJpYXQiOjE3Nzk1MTkzODMsImp0aSI6ImFjM2RhZjAwZWQ1NTQ1MTliZTkxZmQzMzEzZjJkMDk1In0.ETCGreu-5qGzpJRP4PdnbvAvsdx-Qea7lPZUW4OEoeA
+
+
+Step1:
+
+oc create secret docker-registry secret1 --docker-server=cp.icr.io --docker-username=cp --docker-password=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJJQk0gTWFya2V0cGxhY2UiLCJpYXQiOjE3Nzk1MTkzODMsImp0aSI6ImFjM2RhZjAwZWQ1NTQ1MTliZTkxZmQzMzEzZjJkMDk1In0.ETCGreu-5qGzpJRP4PdnbvAvsdx-Qea7lPZUW4OEoeA --docker-email="armada@us.ibm.com" --dry-run=client --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode > myregistryconfigjson
+
+
+
+Step2:
+
+oc get secret pull-secret -n openshift-config  --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode > dockerconfigjson
+
+Step3:
+
+jq -s '.[0] * .[1]' dockerconfigjson myregistryconfigjson > dockerconfigjson-merged
+
+Step4:
+
+oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=dockerconfigjson-merged
+
+
+==
+verify
+
+oc get secret pull-secret -n openshift-config --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode
+
+
+oc create secret docker-registry entitled-cp-icr-io --docker-server=cp.icr.io --docker-username=cp --docker-password=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJJQk0gTWFya2V0cGxhY2UiLCJpYXQiOjE3Nzk1MTkzODMsImp0aSI6ImFjM2RhZjAwZWQ1NTQ1MTliZTkxZmQzMzEzZjJkMDk1In0.ETCGreu-5qGzpJRP4PdnbvAvsdx-Qea7lPZUW4OEoeA --docker-email==armada@us.ibm.com -n ibm-spectrum-fusion-ns
+
+oc patch -n ibm-spectrum-fusion-ns serviceaccount/default --type='json' -p='[{"op":"add","path":"/imagePullSecrets/-","value":{"name":"entitled-cp-icr-io"}}]'
+
+
+
+
+oc run p1 --image=cp.icr.io/ibm-nginx:latest --generator=run-pod/v1
+
+
+oc run p1 --image=cp.icr.io/cp/ibm-nginx:latest
+oc get pod <pod_name> -n <project>
+
+
+
+{"auths":{"quay.io":{"auth":"b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K29jbV9hY2Nlc3NfMzBkNjU0OTRiMjYyNDk2MDg0N2ZmNjRlZGRhYzFiNTc6TVRaWFhCRERLQVhDTTlIOEI2RlhNRUFaWEZZUVJZR1BRTFRXR1dZMEswVEY2UUpEWDJQNllGSzk0MldSWUdPTQ==","email":"armada@us.ibm.com"},"registry.connect.redhat.com":{"auth":"fHVoYy1wb29sLWFjOTBmZDljLTVmOWMtNDcyMC04N2M4LWZiYTdjMGE2NTcyZDpleUpoYkdjaU9pSlNVelV4TWlKOS5leUp6ZFdJaU9pSmtNRFZoT0RNd1kyTTFOV0kwWmprMk9ERXhOREkwWVRSbVlqVmhNemd6WmlKOS5LbDJQWGxJZmt0RlZtTDlPQi1QandxSnBJSkhteVpWbVBCZDh6SmVSc2N5VDQ3bHRVTFJLWWxsVlJDX1hYNExETUhkOHh3cms4UlJpUTVPZ01wUUMwcWt1Wm1RTkY2aGJSQ2tEN3BXek02ZGljSnFqWXc0dUQ2THdibWMtSzBWb2JjUHZTM0ZFTEFBV2hFWmpic29ic2tFaE5sTTdOYlNmSHJBZHlWWENfSHhYQ1lza1JIQnhsX0poWGxyenlsbHZCSzhYTVBOZ19Ca3dCT3lncEI3S1BaZ18teVVYUFlBUXR0VDZHMG9TRjJ4bExlT0hPU2g3V0NieUxhX2trWXVXZkJFS1hlYUNlOGd5WkEwMWgxYUttNVlWSVM3dmtPdDdiSmJROGlvM05JdGxNOGlnTnlQVW1pdTlqa3JrZmRUXzJTa1BSZ25ZaWZ2Q1p4MVd6cG92TVZSZEJPWmdtVkJNeExGWnE1WDN2RTV6MEZhLXRjYk1jODI3UWhjbjV4WXZ5SGhmRmxwRW05QVlDWkRCd1NTUDYxdUhGNERhX3RPbUktSWtNYUNFSG1VNEtfZUpxQk9mZG5sdmloNWxkamN3c1ZJM2Nic1pyeUlzMlJmdFdWeWxBaWVCbUlFR0dLNVNfSG00U215VGlDTm4zWENRRWpXc3Zoc1NRc0FBZTNiZ3N3UHpZRzdTanJHd3UycDVTVTVpOElTRVpPa3pqM1Z2MkhsdVk0b2pHNkE4WWRvZ1lKcWJrOGxkX3paX1h4SmlvRXdWcnVha1FMV3lfN3ZPUlR2a3VTdWl3b0dZazM1TVFsX1FlLTR1M29OYURRTHdic0FtUmpVT3lxUm9QLTQ1RmMtZ0hiVW1rWUcxaF9pdm56WEdJMVR5czJKVWI5R2VNZUJVSHZBUU5qRQ==","email":"armada@us.ibm.com"},"registry.redhat.io":{"auth":"fHVoYy1wb29sLWFjOTBmZDljLTVmOWMtNDcyMC04N2M4LWZiYTdjMGE2NTcyZDpleUpoYkdjaU9pSlNVelV4TWlKOS5leUp6ZFdJaU9pSmtNRFZoT0RNd1kyTTFOV0kwWmprMk9ERXhOREkwWVRSbVlqVmhNemd6WmlKOS5LbDJQWGxJZmt0RlZtTDlPQi1QandxSnBJSkhteVpWbVBCZDh6SmVSc2N5VDQ3bHRVTFJLWWxsVlJDX1hYNExETUhkOHh3cms4UlJpUTVPZ01wUUMwcWt1Wm1RTkY2aGJSQ2tEN3BXek02ZGljSnFqWXc0dUQ2THdibWMtSzBWb2JjUHZTM0ZFTEFBV2hFWmpic29ic2tFaE5sTTdOYlNmSHJBZHlWWENfSHhYQ1lza1JIQnhsX0poWGxyenlsbHZCSzhYTVBOZ19Ca3dCT3lncEI3S1BaZ18teVVYUFlBUXR0VDZHMG9TRjJ4bExlT0hPU2g3V0NieUxhX2trWXVXZkJFS1hlYUNlOGd5WkEwMWgxYUttNVlWSVM3dmtPdDdiSmJROGlvM05JdGxNOGlnTnlQVW1pdTlqa3JrZmRUXzJTa1BSZ25ZaWZ2Q1p4MVd6cG92TVZSZEJPWmdtVkJNeExGWnE1WDN2RTV6MEZhLXRjYk1jODI3UWhjbjV4WXZ5SGhmRmxwRW05QVlDWkRCd1NTUDYxdUhGNERhX3RPbUktSWtNYUNFSG1VNEtfZUpxQk9mZG5sdmloNWxkamN3c1ZJM2Nic1pyeUlzMlJmdFdWeWxBaWVCbUlFR0dLNVNfSG00U215VGlDTm4zWENRRWpXc3Zoc1NRc0FBZTNiZ3N3UHpZRzdTanJHd3UycDVTVTVpOElTRVpPa3pqM1Z2MkhsdVk0b2pHNkE4WWRvZ1lKcWJrOGxkX3paX1h4SmlvRXdWcnVha1FMV3lfN3ZPUlR2a3VTdWl3b0dZazM1TVFsX1FlLTR1M29OYURRTHdic0FtUmpVT3lxUm9QLTQ1RmMtZ0hiVW1rWUcxaF9pdm56WEdJMVR5czJKVWI5R2VNZUJVSHZBUU5qRQ==","email":"armada@us.ibm.com"}}}

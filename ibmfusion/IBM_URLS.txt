@@ -1,0 +1,98 @@
+ENtitlement Key
+
+
+eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJJQk0gTWFya2V0cGxhY2UiLCJpYXQiOjE3Nzk1MTkzODMsImp0aSI6ImFjM2RhZjAwZWQ1NTQ1MTliZTkxZmQzMzEzZjJkMDk1In0.ETCGreu-5qGzpJRP4PdnbvAvsdx-Qea7lPZUW4OEoeA
+eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJJQk0gTWFya2V0cGxhY2UiLCJpYXQiOjE3Nzk1MTkzODMsImp0aSI6ImFjM2RhZjAwZWQ1NTQ1MTliZTkxZmQzMzEzZjJkMDk1In0.ETCGreu-5qGzpJRP4PdnbvAvsdx-Qea7lPZUW4OEoeA
+
+
+
+ZXlKMGVYQWlPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LmV5SnBjM01pT2lKSlFrMGdUV0Z5YTJWMGNHeGhZMlVpTENKcFlYUWlPakUzTnprMU1Ua3pPRE1zSW1wMGFTSTZJbUZqTTJSaFpqQXdaV1ExTlRRMU1UbGlaVGt4Wm1Rek16RXpaakprTURrMUluMC5FVENHcmV1LTVxR3pwSlJQNFBkbmJ2QXZzZHgtUWVhN2xQWlVXNE9Fb2VB
+
+
+After Creating New credential
+https://ibm.github.io/CPD-Custom-Image-CLI/_build/cluster_secrets.html
+
+====================
+$ cat catalog_source.yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: ibm-operator-catalog
+  namespace: openshift-marketplace
+spec:
+  displayName: IBM Operator Catalog
+  publisher: IBM
+  sourceType: grpc
+  image: icr.io/cpopen/ibm-operator-catalog:latest
+  updateStrategy:
+    registryPoll:
+      interval: 45m
+
+===================================
+
+
+Important URLS:
+
+1. Installing IBM fusion on IBM CLoud
+   https://www.ibm.com/docs/en/fusion-software/2.12.x?topic=deploying-fusion
+   https://www.ibm.com/docs/en/fusion-software/2.11.0?topic=fusion-installing-cloud
+   https://www.ibm.com/docs/en/spectrum-discover/2.0.5?topic=configuring-deploying-spectrum-discover-as-set-containers
+ 
+Step1:
+ 
+ echo -n "cp:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJJQk0gTWFya2V0cGxhY2UiLCJpYXQiOjE3Nzk1MTkzODMsImp0aSI6ImFjM2RhZjAwZWQ1NTQ1MTliZTkxZmQzMzEzZjJkMDk1In0.ETCGreu-5qGzpJRP4PdnbvAvsdx-Qea7lPZUW4OEoeA" | base64 -e
+
+Step2
+touch authority.json
+
+vi authority.json
+{
+"auth": "Y3A6ZXlKMGVYQWlPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LmV5SnBjM01pT2lKSlFrMGdUV0Z5YTJWMGNHeGhZMlVpTENKcFlYUWlPakUzTnprMU1Ua3pPRE1zSW1wMGFTSTZJbUZqTTJSaFpqQXdaV1ExTlRRMU1UbGlaVGt4Wm1Rek16RXpaakprTURrMUluMC5FVENHcmV1LTVxR3pwSlJQNFBkbmJ2QXZzZHgtUWVhN2xQWlVXNE9Fb2VB"
+}
+
+
+============================Below steps from IBM Documentation Imp===========================
+
+https://www.ibm.com/docs/en/fusion-software/2.11.0?topic=prerequisites-creating-image-pull-secret-cloud-based-installation
+
+oc create secret docker-registry entitled-cp-icr-io --docker-server=cp.icr.io --docker-username=cp --docker-password=<entitlement_key> --docker-email=<docker_email> -n <project>
+
+oc create secret docker-registry entitled-cp-icr-io --docker-server=cp.icr.io --docker-username=cp --docker-password=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJJQk0gTWFya2V0cGxhY2UiLCJpYXQiOjE3Nzk1MTkzODMsImp0aSI6ImFjM2RhZjAwZWQ1NTQ1MTliZTkxZmQzMzEzZjJkMDk1In0.ETCGreu-5qGzpJRP4PdnbvAvsdx-Qea7lPZUW4OEoeA --docker-email=test@gmail.com --dry-run=client --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode > myregistryconfigjson.json
+
+
+
+oc get secret pull-secret -n openshift-config  --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode > dockerconfigjson.json
+jq -s '.[0] * .[1]' myregistryconfigjson.json dockerconfigjson.json > merged_pull_secret.json
+oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=merged_pull_secret.json
+oc get secret pull-secret -n openshift-config --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode
+
+
+Faster Workaround:
+
+oc create secret docker-registry entitled-cp-icr-io --docker-server=cp.icr.io --docker-username=cp --docker-password=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJJQk0gTWFya2V0cGxhY2UiLCJpYXQiOjE3Nzk1MTkzODMsImp0aSI6ImFjM2RhZjAwZWQ1NTQ1MTliZTkxZmQzMzEzZjJkMDk1In0.ETCGreu-5qGzpJRP4PdnbvAvsdx-Qea7lPZUW4OEoeA --docker-email=test@gmail.com -n ibm-spectrum-fusion-ns
+
+oc secrets link default isf-node-exporter-sa entitled-cp-icr-io --for=pull -n ibm-spectrum-fusion-ns
+isf-node-exporter-sa
+
+Find out all Service account using below command:
+oc get deploy -n ibm-spectrum-fusion-ns -o=jsonpath='{range .items[*]}{.metadata.name}{" => "}{.spec.template.spec.serviceAccountName}{"\n"}{end}'
+
+
+Apply secrets for all sa in that ns
+
+for sa in default isf-application-operator-controller-manager fusionmanager-addon-sa isf-application-operator-controller-manager isf-cns-operator-controller-manager isf-data-protection-operator-controller-manager isf-platform-operator-controller-manager isf-prereq-operator-controller-manager isf-serviceability-operator-controller-manager isf-ui-operator-controller-manager isf-update-operator-controller-manager; do   oc secrets link $sa entitled-cp-icr-io --for=pull -n ibm-spectrum-fusion-ns; done
+
+
+ oc describe sa isf-application-operator-controller-manager -n ibm-spectrum-fusion-ns
+ oc delete pod -n ibm-spectrum-fusion-ns --all
+ oc get pods -n ibm-spectrum-fusion-ns
+
+
+oc create secret docker-registry entitled-cp-icr-io --docker-server=cp.icr.io --docker-username=cp --docker-password=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJJQk0gTWFya2V0cGxhY2UiLCJpYXQiOjE3Nzk1MTkzODMsImp0aSI6ImFjM2RhZjAwZWQ1NTQ1MTliZTkxZmQzMzEzZjJkMDk1In0.ETCGreu-5qGzpJRP4PdnbvAvsdx-Qea7lPZUW4OEoeA --docker-email=test@gmail.com -n  openshift-monitoring
+
+oc get deploy -n openshift-monitoring -o=jsonpath='{range .items[*]}{.metadata.name}{" => "}{.spec.template.spec.serviceAccountName}{"\n"}{end}'
+oc secrets link isf-node-exporter-sa entitled-cp-icr-io --for=pull -n openshift-monitoring
+
+ibmc-vpcblock-odf-general
+
+applicationsvc
